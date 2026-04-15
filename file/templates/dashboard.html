@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mindcare Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage: #7c9e87;
+  --sage-light: #a8c5b0;
+  --sage-dark: #4d7a5e;
+  --cream: #faf6f0;
+  --warm: #f0e6d3;
+  --text: #1a2a1e;
+  --text-muted: #5a7060;
+  --rose: #d4847a;
+  --gold: #c9a96e;
+  --blue: #7a9ec9;
+  --purple: #9e87c9;
+  --white: #ffffff;
+  --border: rgba(124,158,135,0.15);
+  --shadow: 0 8px 32px rgba(76,122,94,0.12);
+  --card-bg: rgba(255,255,255,0.9);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* ── Sidebar ── */
+.sidebar {
+  position:fixed; left:0; top:0; bottom:0; width:72px;
+  background:linear-gradient(180deg,var(--sage-dark),#2d5a3e);
+  display:flex; flex-direction:column; align-items:center;
+  padding:20px 0; z-index:100;
+  box-shadow:4px 0 24px rgba(0,0,0,0.12);
+}
+.sidebar-logo { font-size:28px; margin-bottom:32px; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.2)); }
+.nav-item {
+  width:48px; height:48px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; cursor:pointer; margin-bottom:8px;
+  transition:all 0.3s; position:relative;
+  background:transparent; border:none;
+  color:rgba(255,255,255,0.6);
+}
+.nav-item:hover, .nav-item.active { background:rgba(255,255,255,0.15); color:white; }
+.nav-item .tooltip {
+  position:absolute; left:64px; background:#1a2a1e;
+  color:white; padding:6px 12px; border-radius:8px;
+  font-size:12px; font-weight:500; white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+}
+.nav-item:hover .tooltip { opacity:1; }
+.sidebar-bottom { margin-top:auto; }
+
+/* ── Main ── */
+.main { margin-left:72px; min-height:100vh; }
+
+/* ── Header ── */
+.header {
+  background:var(--card-bg); border-bottom:1px solid var(--border);
+  padding:16px 32px; display:flex; align-items:center;
+  justify-content:space-between; position:sticky; top:0; z-index:50;
+  backdrop-filter:blur(20px);
+}
+.header-greeting h2 { font-family:'Playfair Display',serif; font-size:20px; color:var(--text); }
+.header-greeting p { font-size:13px; color:var(--text-muted); margin-top:2px; }
+.header-actions { display:flex; align-items:center; gap:12px; }
+.badge {
+  padding:6px 16px; border-radius:20px; font-size:13px;
+  font-weight:600; background:rgba(124,158,135,0.12); color:var(--sage-dark);
+}
+.btn-logout {
+  padding:8px 16px; border-radius:12px; font-size:13px;
+  font-weight:500; background:transparent; border:1.5px solid var(--border);
+  color:var(--text-muted); cursor:pointer; transition:all 0.2s;
+  font-family:'DM Sans',sans-serif;
+}
+.btn-logout:hover { background:var(--warm); color:var(--text); }
+
+/* ── Panels ── */
+.panel { display:none; padding:28px 32px; }
+.panel.active { display:block; animation:fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+.panel-title { font-family:'Playfair Display',serif; font-size:26px; margin-bottom:6px; }
+.panel-sub { font-size:14px; color:var(--text-muted); margin-bottom:28px; }
+
+/* ── Cards ── */
+.card {
+  background:var(--card-bg); border-radius:24px; padding:24px;
+  border:1px solid rgba(255,255,255,0.8); box-shadow:var(--shadow);
+}
+.card-title { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:16px; }
+
+/* ── Stats Grid ── */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card {
+  background:var(--card-bg); border-radius:20px; padding:20px;
+  border:1px solid rgba(255,255,255,0.8); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; position:relative; overflow:hidden;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--accent, var(--sage));
+}
+.stat-icon { font-size:28px; margin-bottom:12px; }
+.stat-value { font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text); }
+.stat-label { font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:500; }
+
+/* ── Mood Selector ── */
+.mood-grid { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+.mood-btn {
+  padding:12px 20px; border-radius:16px;
+  border:2px solid var(--border); background:var(--warm);
+  cursor:pointer; font-size:13px; font-weight:500;
+  transition:all 0.3s; color:var(--text);
+  display:flex; align-items:center; gap:8px;
+}
+.mood-btn:hover, .mood-btn.selected {
+  border-color:var(--sage); background:rgba(124,158,135,0.12);
+  transform:translateY(-2px); box-shadow:0 6px 20px rgba(124,158,135,0.2);
+}
+.mood-btn span { font-size:22px; }
+
+/* ── Water ── */
+.water-glasses { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0; }
+.glass-cup {
+  width:48px; height:48px; border-radius:12px;
+  border:2px solid rgba(122,158,201,0.3);
+  background:rgba(122,158,201,0.08);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; cursor:pointer; transition:all 0.3s;
+}
+.glass-cup.filled { background:rgba(122,158,201,0.25); border-color:var(--blue); }
+.glass-cup.filled::after { content:'💧'; font-size:22px; }
+.glass-cup:not(.filled)::after { content:'🥛'; font-size:18px; opacity:0.3; }
+
+/* ── Progress Bar ── */
+.progress-bar {
+  height:12px; background:rgba(124,158,135,0.1);
+  border-radius:6px; overflow:hidden; margin:8px 0;
+}
+.progress-fill {
+  height:100%; border-radius:6px;
+  background:linear-gradient(90deg,var(--sage),var(--sage-dark));
+  transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ── Buttons ── */
+.btn {
+  padding:12px 24px; border-radius:14px; border:none;
+  font-family:'DM Sans',sans-serif; font-weight:600;
+  font-size:14px; cursor:pointer; transition:all 0.3s;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn-primary {
+  background:linear-gradient(135deg,var(--sage),var(--sage-dark));
+  color:white; box-shadow:0 6px 20px rgba(76,122,94,0.3);
+}
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(76,122,94,0.4); }
+.btn-rose {
+  background:linear-gradient(135deg,var(--rose),#b5635a);
+  color:white; box-shadow:0 6px 20px rgba(212,132,122,0.3);
+}
+.btn-gold {
+  background:linear-gradient(135deg,var(--gold),#b8895a);
+  color:white; box-shadow:0 6px 20px rgba(201,169,110,0.3);
+}
+
+/* ── Input ── */
+.inp {
+  width:100%; padding:12px 16px; border-radius:14px;
+  border:2px solid var(--border); background:var(--warm);
+  font-family:'DM Sans',sans-serif; font-size:14px;
+  color:var(--text); outline:none; transition:all 0.3s;
+  margin-bottom:12px;
+}
+.inp:focus { border-color:var(--sage); background:white; box-shadow:0 0 0 4px rgba(124,158,135,0.1); }
+
+.inp-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* ── Music Player ── */
+.music-player {
+  background:linear-gradient(135deg,#1a2a1e,#2d5a3e);
+  border-radius:24px; padding:28px; color:white;
+  position:relative; overflow:hidden;
+}
+.music-player::before {
+  content:''; position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.now-playing { font-size:11px; letter-spacing:2px; opacity:0.6; text-transform:uppercase; margin-bottom:8px; }
+.track-name { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:4px; }
+.track-artist { font-size:13px; opacity:0.6; margin-bottom:20px; }
+.music-controls { display:flex; align-items:center; gap:16px; }
+.ctrl-btn {
+  width:40px; height:40px; border-radius:50%; border:none;
+  background:rgba(255,255,255,0.1); color:white;
+  font-size:16px; cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center;
+}
+.ctrl-btn:hover { background:rgba(255,255,255,0.2); transform:scale(1.1); }
+.play-btn {
+  width:52px; height:52px; font-size:20px;
+  background:white; color:var(--sage-dark);
+  box-shadow:0 6px 20px rgba(0,0,0,0.3);
+}
+.volume-slider {
+  width:80px; -webkit-appearance:none; height:4px;
+  background:rgba(255,255,255,0.2); border-radius:2px; outline:none;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px;
+  border-radius:50%; background:white; cursor:pointer;
+}
+.music-tracks { margin-top:20px; }
+.track-item {
+  padding:10px 14px; border-radius:12px; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+  transition:all 0.2s; color:rgba(255,255,255,0.8); font-size:13px;
+}
+.track-item:hover, .track-item.active { background:rgba(255,255,255,0.1); color:white; }
+.track-item .track-dot { width:8px; height:8px; border-radius:50%; background:var(--sage-light); }
+.track-item.active .track-dot { background:white; box-shadow:0 0 8px white; animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+
+/* ── Chatbot ── */
+.chat-container { display:flex; flex-direction:column; height:480px; }
+.chat-messages {
+  flex:1; overflow-y:auto; padding:16px;
+  background:rgba(250,246,240,0.5); border-radius:18px;
+  margin-bottom:16px; scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:var(--sage-light); border-radius:2px; }
+
+.msg { display:flex; margin-bottom:14px; animation:msgIn 0.3s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.msg.user { justify-content:flex-end; }
+.msg-bubble {
+  max-width:72%; padding:12px 16px; border-radius:18px;
+  font-size:14px; line-height:1.6; word-break:break-word;
+}
+.msg.bot .msg-bubble { background:white; border-bottom-left-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.msg.user .msg-bubble { background:linear-gradient(135deg,var(--sage),var(--sage-dark)); color:white; border-bottom-right-radius:4px; }
+.msg-time { font-size:10px; color:var(--text-muted); margin-top:4px; }
+.bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--sage),var(--sage-dark)); display:flex; align-items:center; justify-content:center; font-size:16px; margin-right:8px; flex-shrink:0; align-self:flex-end; }
+
+.chat-input-row { display:flex; gap:10px; align-items:center; }
+.chat-inp {
+  flex:1; padding:13px 18px; border-radius:24px;
+  border:2px solid var(--border); background:white;
+  font-family:'DM Sans',sans-serif; font-size:14px;
+  color:var(--text); outline:none; transition:all 0.3s;
+}
+.chat-inp:focus { border-color:var(--sage); box-shadow:0 0 0 4px rgba(124,158,135,0.1); }
+.chat-send {
+  width:48px; height:48px; border-radius:50%; border:none;
+  background:linear-gradient(135deg,var(--sage),var(--sage-dark));
+  color:white; font-size:18px; cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(76,122,94,0.35);
+}
+.chat-send:hover { transform:scale(1.1); }
+.voice-btn {
+  width:48px; height:48px; border-radius:50%; border:none;
+  background:var(--warm); color:var(--sage-dark);
+  font-size:20px; cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--border);
+}
+.voice-btn:hover { background:rgba(124,158,135,0.15); }
+.voice-btn.listening { background:rgba(212,132,122,0.15); border-color:var(--rose); animation:voicePulse 1s ease-in-out infinite; }
+@keyframes voicePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+/* ── Breathing ── */
+.breathing-circle {
+  width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle,rgba(124,158,135,0.3),rgba(77,122,94,0.1));
+  border:3px solid var(--sage-light);
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 24px;
+  flex-direction:column; font-size:14px; font-weight:600;
+  color:var(--sage-dark); transition:all 1s ease;
+  box-shadow:0 0 40px rgba(124,158,135,0.2);
+}
+.breathing-circle.expand { transform:scale(1.35); background:radial-gradient(circle,rgba(124,158,135,0.5),rgba(77,122,94,0.2)); box-shadow:0 0 60px rgba(124,158,135,0.35); }
+.breathing-circle.hold { transform:scale(1.35); }
+.breathing-circle.shrink { transform:scale(1); }
+.breathing-text { font-size:20px; margin-bottom:4px; }
+.breathing-count { font-size:36px; font-weight:700; color:var(--sage); }
+
+/* ── Period Tracker ── */
+.period-card { background:linear-gradient(135deg,#fdf0f5,#fce8ef); border:1px solid rgba(212,132,122,0.2); }
+.period-title { color:#8b4d55 !important; }
+.cycle-visual {
+  display:flex; gap:6px; flex-wrap:wrap; margin:16px 0;
+}
+.cycle-day {
+  width:32px; height:32px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:600; cursor:pointer;
+  transition:all 0.2s;
+}
+.cycle-day.period { background:#d4847a; color:white; }
+.cycle-day.ovulation { background:#9e87c9; color:white; }
+.cycle-day.pms { background:#c9a96e; color:white; }
+.cycle-day.normal { background:rgba(212,132,122,0.1); color:#8b4d55; border:1px solid rgba(212,132,122,0.2); }
+.cycle-legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); }
+.legend-dot { width:10px; height:10px; border-radius:3px; }
+
+/* ── Sleep ── */
+.sleep-quality-badge {
+  display:inline-block; padding:6px 16px; border-radius:20px;
+  font-size:13px; font-weight:600; margin-top:8px;
+}
+.quality-excellent { background:#eafaf1; color:#1e8449; }
+.quality-good { background:#eaf2fb; color:#1a5276; }
+.quality-fair { background:#fef9e7; color:#9a7d0a; }
+.quality-poor { background:#fde8e8; color:#c0392b; }
+
+/* ── Emergency ── */
+.emergency-btn {
+  width:100%; padding:20px; border-radius:20px;
+  background:linear-gradient(135deg,#e74c3c,#c0392b);
+  color:white; border:none; font-size:16px; font-weight:700;
+  cursor:pointer; transition:all 0.3s; font-family:'DM Sans',sans-serif;
+  box-shadow:0 8px 24px rgba(192,57,43,0.4);
+  display:flex; align-items:center; justify-content:center; gap:12px;
+}
+.emergency-btn:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(192,57,43,0.5); }
+
+/* ── Toast ── */
+.toast {
+  position:fixed; bottom:28px; right:28px;
+  background:#1a2a1e; color:white; padding:14px 20px;
+  border-radius:16px; font-size:14px; font-weight:500;
+  box-shadow:0 12px 40px rgba(0,0,0,0.2); z-index:1000;
+  transform:translateY(20px); opacity:0;
+  transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  max-width:320px;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* ── Tabs ── */
+.mini-tabs { display:flex; gap:6px; margin-bottom:20px; }
+.mini-tab {
+  padding:8px 18px; border-radius:12px; font-size:13px;
+  font-weight:600; cursor:pointer; transition:all 0.2s;
+  border:1.5px solid var(--border); background:transparent;
+  color:var(--text-muted); font-family:'DM Sans',sans-serif;
+}
+.mini-tab.active { background:var(--sage-dark); color:white; border-color:transparent; }
+
+/* ── Grid layouts ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media(max-width:768px) { .two-col,.three-col { grid-template-columns:1fr; } .stats-grid { grid-template-columns:1fr 1fr; } }
+
+.habit-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 18px; border-radius:16px;
+  border:2px solid var(--border); background:var(--warm);
+  cursor:pointer; transition:all 0.3s; margin-bottom:10px;
+}
+.habit-item.done { background:rgba(124,158,135,0.12); border-color:var(--sage-light); }
+.habit-check {
+  width:24px; height:24px; border-radius:8px;
+  border:2px solid var(--sage-light); background:transparent;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; transition:all 0.3s; flex-shrink:0;
+}
+.habit-item.done .habit-check { background:var(--sage); border-color:var(--sage); color:white; }
+.habit-label { font-size:14px; font-weight:500; }
+.habit-icon { font-size:20px; }
+
+.mood-chart { display:flex; align-items:flex-end; gap:6px; height:80px; }
+.mood-bar {
+  flex:1; background:linear-gradient(to top,var(--sage),var(--sage-light));
+  border-radius:6px 6px 0 0; transition:height 0.8s;
+  min-height:4px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">🌿</div>
+  <button class="nav-item active" onclick="showPanel('home')" data-p="home">🏠<span class="tooltip">Home</span></button>
+  <button class="nav-item" onclick="showPanel('mood')" data-p="mood">😊<span class="tooltip">Mood Tracker</span></button>
+  <button class="nav-item" onclick="showPanel('water')" data-p="water">💧<span class="tooltip">Water Intake</span></button>
+  <button class="nav-item" onclick="showPanel('sleep')" data-p="sleep">😴<span class="tooltip">Sleep Tracker</span></button>
+  <button class="nav-item" onclick="showPanel('habits')" data-p="habits">✅<span class="tooltip">Daily Habits</span></button>
+  <button class="nav-item" onclick="showPanel('stress')" data-p="stress">🧘<span class="tooltip">Stress Relief</span></button>
+  <button class="nav-item" onclick="showPanel('music')" data-p="music">🎵<span class="tooltip">Calm Music</span></button>
+  <button class="nav-item" onclick="showPanel('chat')" data-p="chat">🤖<span class="tooltip">AI Chat</span></button>
+  <button class="nav-item period-nav" onclick="showPanel('period')" data-p="period" style="display:none">🌸<span class="tooltip">Period Tracker</span></button>
+  <div class="sidebar-bottom">
+    <button class="nav-item" onclick="showPanel('emergency')" data-p="emergency">☎️<span class="tooltip">Emergency</span></button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-greeting">
+      <h2 id="greeting-text">Good morning! 🌿</h2>
+      <p id="greeting-sub">Your wellness journey continues today</p>
+    </div>
+    <div class="header-actions">
+      <span class="badge" id="date-badge"></span>
+      <button class="btn-logout" onclick="window.location.href='/logout'">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- HOME PANEL -->
+  <div id="panel-home" class="panel active">
+    <div class="panel-title" id="home-welcome">Welcome back!</div>
+    <p class="panel-sub">Here's your wellness snapshot for today</p>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card" style="--accent:#7a9ec9">
+        <div class="stat-icon">💧</div>
+        <div class="stat-value" id="stat-water">0/8</div>
+        <div class="stat-label">Glasses of Water</div>
+      </div>
+      <div class="stat-card" style="--accent:#9e87c9">
+        <div class="stat-icon">😴</div>
+        <div class="stat-value" id="stat-sleep">–</div>
+        <div class="stat-label">Hours Slept</div>
+      </div>
+      <div class="stat-card" style="--accent:#7c9e87">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="stat-habits">0</div>
+        <div class="stat-label">Habits Done Today</div>
+      </div>
+      <div class="stat-card" style="--accent:#d4847a">
+        <div class="stat-icon">😊</div>
+        <div class="stat-value" id="stat-mood">–</div>
+        <div class="stat-label">Last Mood</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">💡 Today's Wellness Tip</div>
+        <p id="daily-tip" style="font-size:14px;line-height:1.7;color:var(--text-muted)"></p>
+      </div>
+      <div class="card">
+        <div class="card-title">🔥 Quick Actions</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-primary" onclick="showPanel('chat')" style="width:100%;justify-content:center">🤖 Talk to Zara (AI)</button>
+          <button class="btn btn-gold" onclick="showPanel('stress')" style="width:100%;justify-content:center">🧘 Quick Breathe</button>
+          <button class="btn btn-rose" onclick="showPanel('music')" style="width:100%;justify-content:center">🎵 Play Calm Music</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOOD PANEL -->
+  <div id="panel-mood" class="panel">
+    <div class="panel-title">😊 Mood Tracker</div>
+    <p class="panel-sub">How are you feeling today? Log your mood and detect patterns.</p>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Select Your Mood</div>
+        <div class="mood-grid">
+          <button class="mood-btn" onclick="selectMood('Happy','😄')"><span>😄</span> Happy</button>
+          <button class="mood-btn" onclick="selectMood('Calm','😌')"><span>😌</span> Calm</button>
+          <button class="mood-btn" onclick="selectMood('Excited','🤩')"><span>🤩</span> Excited</button>
+          <button class="mood-btn" onclick="selectMood('Okay','😐')"><span>😐</span> Okay</button>
+          <button class="mood-btn" onclick="selectMood('Stressed','😰')"><span>😰</span> Stressed</button>
+          <button class="mood-btn" onclick="selectMood('Sad','😢')"><span>😢</span> Sad</button>
+          <button class="mood-btn" onclick="selectMood('Tired','😴')"><span>😴</span> Tired</button>
+          <button class="mood-btn" onclick="selectMood('Anxious','😟')"><span>😟</span> Anxious</button>
+          <button class="mood-btn" onclick="selectMood('Angry','😠')"><span>😠</span> Angry</button>
+          <button class="mood-btn" onclick="selectMood('Grateful','🙏')"><span>🙏</span> Grateful</button>
+        </div>
+        <textarea class="inp" id="mood-note" placeholder="Optional: Add a note about your day..." rows="3" style="resize:none"></textarea>
+        <button class="btn btn-primary" onclick="logMood()" style="width:100%;justify-content:center">Log Mood 😊</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Mood History</div>
+        <div id="mood-history" style="max-height:360px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WATER PANEL -->
+  <div id="panel-water" class="panel">
+    <div class="panel-title">💧 Water Intake Tracker</div>
+    <p class="panel-sub">Stay hydrated! Track your daily water intake and meet your goal.</p>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Today's Progress</div>
+        <div style="text-align:center;margin:16px 0">
+          <div style="font-family:'Playfair Display',serif;font-size:56px;color:var(--blue)" id="water-count">0</div>
+          <div style="font-size:14px;color:var(--text-muted)">glasses out of <strong>8</strong> goal</div>
+          <div class="progress-bar" style="margin-top:12px"><div class="progress-fill" id="water-bar" style="width:0%;background:linear-gradient(90deg,var(--blue),#5a7ec9)"></div></div>
+          <div id="water-msg" style="font-size:13px;color:var(--text-muted);margin-top:8px"></div>
+        </div>
+        <div class="water-glasses" id="water-glasses"></div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn btn-primary" onclick="addWater(1)" style="flex:1;justify-content:center">+ 1 Glass 💧</button>
+          <button class="btn" style="flex:1;justify-content:center;background:var(--warm);color:var(--text);border:2px solid var(--border)" onclick="resetWater()">Reset 🔄</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💡 Hydration Tips</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="padding:12px 16px;background:rgba(122,158,201,0.08);border-radius:14px;border:1px solid rgba(122,158,201,0.2);font-size:13px;line-height:1.6;color:var(--text-muted)">🌅 <strong>Morning:</strong> Drink 2 glasses right after waking up to kickstart metabolism</div>
+          <div style="padding:12px 16px;background:rgba(122,158,201,0.08);border-radius:14px;border:1px solid rgba(122,158,201,0.2);font-size:13px;line-height:1.6;color:var(--text-muted)">🍽️ <strong>Before meals:</strong> 1 glass 30 mins before eating aids digestion</div>
+          <div style="padding:12px 16px;background:rgba(122,158,201,0.08);border-radius:14px;border:1px solid rgba(122,158,201,0.2);font-size:13px;line-height:1.6;color:var(--text-muted)">🏃 <strong>Exercise:</strong> Drink extra water before, during, and after workouts</div>
+          <div style="padding:12px 16px;background:rgba(122,158,201,0.08);border-radius:14px;border:1px solid rgba(122,158,201,0.2);font-size:13px;line-height:1.6;color:var(--text-muted)">🌙 <strong>Evening:</strong> Stop 2 hours before bed to avoid disrupting sleep</div>
+          <div style="padding:12px 16px;background:rgba(122,158,201,0.08);border-radius:14px;border:1px solid rgba(122,158,201,0.2);font-size:13px;line-height:1.6;color:var(--text-muted)">🍋 <strong>Tip:</strong> Add lemon, mint or cucumber slices to make water more appealing!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLEEP PANEL -->
+  <div id="panel-sleep" class="panel">
+    <div class="panel-title">😴 Sleep Tracker</div>
+    <p class="panel-sub">Analyze your sleep quality and build a healthier sleep routine.</p>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Log Today's Sleep</div>
+        <div class="inp-row">
+          <div>
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Bedtime</label>
+            <input type="time" class="inp" id="sleep-time" value="23:00">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Wake Up</label>
+            <input type="time" class="inp" id="wake-time" value="07:00">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="logSleep()" style="width:100%;justify-content:center;margin-bottom:12px">Calculate Sleep Quality 🌙</button>
+        <div id="sleep-result" style="display:none" class="card" style="margin-top:12px">
+          <div style="text-align:center">
+            <div style="font-size:48px;margin-bottom:8px" id="sleep-emoji"></div>
+            <div style="font-family:'Playfair Display',serif;font-size:32px;color:var(--text)" id="sleep-hours-display"></div>
+            <div style="font-size:13px;color:var(--text-muted);margin:4px 0" id="sleep-quality-display"></div>
+            <div id="sleep-tip-display" style="font-size:13px;color:var(--text-muted);margin-top:12px;padding:12px;background:var(--warm);border-radius:12px;line-height:1.6"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sleep Tips & Schedule</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px;border:1px solid rgba(158,135,201,0.2);font-size:13px;line-height:1.6">🌙 <strong>Ideal:</strong> 7–9 hours for adults, 8–10 for teens</div>
+          <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px;border:1px solid rgba(158,135,201,0.2);font-size:13px;line-height:1.6">📱 <strong>No screens</strong> 60 mins before bed — blue light blocks melatonin</div>
+          <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px;border:1px solid rgba(158,135,201,0.2);font-size:13px;line-height:1.6">❄️ <strong>Cool room</strong> — 18–20°C is the ideal sleep temperature</div>
+          <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px;border:1px solid rgba(158,135,201,0.2);font-size:13px;line-height:1.6">☕ <strong>No caffeine</strong> after 2 PM — it stays in your system for 6+ hours</div>
+          <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px;border:1px solid rgba(158,135,201,0.2);font-size:13px;line-height:1.6">🧘 <strong>Wind-down ritual:</strong> reading, gentle yoga, or meditation</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HABITS PANEL -->
+  <div id="panel-habits" class="panel">
+    <div class="panel-title">✅ Daily Wellness Habits</div>
+    <p class="panel-sub">Build healthy routines one habit at a time. Check off as you complete them!</p>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Today's Checklist</div>
+        <div id="habits-list">
+          <div class="habit-item" id="habit-exercise" onclick="toggleHabit('exercise')"><div class="habit-check" id="chk-exercise"></div><div class="habit-icon">🏃</div><div class="habit-label">30 min Exercise / Walk</div></div>
+          <div class="habit-item" id="habit-breakfast" onclick="toggleHabit('breakfast')"><div class="habit-check" id="chk-breakfast"></div><div class="habit-icon">🥗</div><div class="habit-label">Healthy Breakfast</div></div>
+          <div class="habit-item" id="habit-water" onclick="toggleHabit('water8')"><div class="habit-check" id="chk-water8"></div><div class="habit-icon">💧</div><div class="habit-label">8 Glasses of Water</div></div>
+          <div class="habit-item" id="habit-meditation" onclick="toggleHabit('meditation')"><div class="habit-check" id="chk-meditation"></div><div class="habit-icon">🧘</div><div class="habit-label">5 min Meditation</div></div>
+          <div class="habit-item" id="habit-screen" onclick="toggleHabit('screen')"><div class="habit-check" id="chk-screen"></div><div class="habit-icon">📵</div><div class="habit-label">Screen Time < 4 hrs</div></div>
+          <div class="habit-item" id="habit-sleep" onclick="toggleHabit('sleep8')"><div class="habit-check" id="chk-sleep8"></div><div class="habit-icon">😴</div><div class="habit-label">7-9 hours Sleep</div></div>
+          <div class="habit-item" id="habit-journal" onclick="toggleHabit('journal')"><div class="habit-check" id="chk-journal"></div><div class="habit-icon">📓</div><div class="habit-label">Gratitude Journal</div></div>
+          <div class="habit-item" id="habit-fruit" onclick="toggleHabit('fruit')"><div class="habit-check" id="chk-fruit"></div><div class="habit-icon">🍎</div><div class="habit-label">Eat Fruits / Veggies</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Progress</div>
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-family:'Playfair Display',serif;font-size:56px;color:var(--sage)" id="habits-count-display">0/8</div>
+          <div style="font-size:14px;color:var(--text-muted);margin:8px 0">habits completed today</div>
+          <div class="progress-bar"><div class="progress-fill" id="habits-bar" style="width:0%"></div></div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:12px" id="habits-msg">Start checking off your habits!</div>
+        </div>
+        <div style="padding:16px;background:rgba(124,158,135,0.08);border-radius:16px;border:1px solid var(--border);margin-top:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Why It Matters</div>
+          <p style="font-size:13px;line-height:1.7;color:var(--text-muted)">Consistent daily habits reduce stress by 40%, improve sleep quality, boost energy, and dramatically improve mental health over time. Small actions = big results! 🌱</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRESS PANEL -->
+  <div id="panel-stress" class="panel">
+    <div class="panel-title">🧘 Stress Relief Center</div>
+    <p class="panel-sub">Guided breathing, meditation, and instant calm techniques.</p>
+    <div class="mini-tabs">
+      <button class="mini-tab active" onclick="switchStressTab('breathe')">🌬️ Breathing</button>
+      <button class="mini-tab" onclick="switchStressTab('meditation')">🧘 Meditation</button>
+      <button class="mini-tab" onclick="switchStressTab('tips')">💡 Instant Tips</button>
+    </div>
+
+    <div id="stress-breathe" class="stress-panel-content">
+      <div class="card" style="text-align:center;max-width:480px;margin:0 auto">
+        <div class="card-title">4-7-8 Breathing Technique</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">Scientifically proven to activate the parasympathetic nervous system and reduce anxiety within 2 minutes.</p>
+        <div class="breathing-circle" id="breathing-circle">
+          <div class="breathing-text" id="breathing-label">Ready</div>
+          <div class="breathing-count" id="breathing-count">●</div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-primary" id="breathe-btn" onclick="startBreathing()">Start Breathing 🌬️</button>
+          <button class="btn" style="background:var(--warm);border:2px solid var(--border);color:var(--text)" onclick="stopBreathing()">Stop</button>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:var(--warm);border-radius:16px;text-align:left">
+          <strong style="font-size:13px">The 4-7-8 Method:</strong>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.8">
+            🔵 <strong>Inhale</strong> through nose — 4 counts<br>
+            🟡 <strong>Hold</strong> your breath — 7 counts<br>
+            🔴 <strong>Exhale</strong> through mouth — 8 counts<br>
+            Repeat 4 cycles for maximum effect
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stress-meditation" class="stress-panel-content" style="display:none">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">🧘 2-Minute Mindfulness</div>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.8;color:var(--text-muted)">
+            <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px;counter-increment:step">
+              <strong>Step 1 — Find stillness</strong><br>Sit comfortably. Close your eyes or soften your gaze downward.
+            </div>
+            <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px">
+              <strong>Step 2 — Breathe naturally</strong><br>Don't control your breath. Just notice it flowing in and out.
+            </div>
+            <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px">
+              <strong>Step 3 — Anchor to now</strong><br>Notice 5 things you can feel right now — chair, temperature, heartbeat.
+            </div>
+            <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px">
+              <strong>Step 4 — Release thoughts</strong><br>When thoughts arise, acknowledge them and gently return to breath.
+            </div>
+            <div style="padding:14px;background:rgba(158,135,201,0.08);border-radius:14px">
+              <strong>Step 5 — Return slowly</strong><br>Wiggle fingers, open eyes slowly. Carry this peace with you.
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎯 5-4-3-2-1 Grounding</div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">This technique instantly grounds you in the present moment, interrupting anxiety spirals.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="padding:14px;background:rgba(122,158,201,0.08);border-radius:14px;border-left:4px solid var(--blue)"><strong>5</strong> things you can <strong>see</strong> 👁️</div>
+            <div style="padding:14px;background:rgba(122,158,201,0.08);border-radius:14px;border-left:4px solid var(--sage)"><strong>4</strong> things you can <strong>touch</strong> ✋</div>
+            <div style="padding:14px;background:rgba(122,158,201,0.08);border-radius:14px;border-left:4px solid var(--gold)"><strong>3</strong> things you can <strong>hear</strong> 👂</div>
+            <div style="padding:14px;background:rgba(122,158,201,0.08);border-radius:14px;border-left:4px solid var(--rose)"><strong>2</strong> things you can <strong>smell</strong> 👃</div>
+            <div style="padding:14px;background:rgba(122,158,201,0.08);border-radius:14px;border-left:4px solid var(--purple)"><strong>1</strong> thing you can <strong>taste</strong> 👅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stress-tips" class="stress-panel-content" style="display:none">
+      <div class="three-col">
+        <div class="card"><div style="font-size:32px;margin-bottom:12px">🚶</div><strong>Take a Walk</strong><p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6">Even 10 minutes of walking reduces cortisol (stress hormone) by 15%. Nature boosts this effect 3x.</p></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px">🎵</div><strong>Listen to Music</strong><p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6">Slow-tempo music (60-80 BPM) triggers alpha brain waves — the same as during meditation.</p><button class="btn btn-primary" style="margin-top:12px;font-size:12px;padding:8px 16px" onclick="showPanel('music')">Open Music Player</button></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px">📝</div><strong>Brain Dump</strong><p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6">Write everything on your mind without filter. This empties the "mental RAM" causing stress.</p></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px">❄️</div><strong>Cold Water Splash</strong><p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6">Splash cold water on your face. It activates the mammalian dive reflex, instantly calming your nervous system.</p></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px">🤣</div><strong>Laugh Therapy</strong><p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6">Watch a funny video for 5 minutes. Laughter releases endorphins and physically relaxes muscles for up to 45 minutes.</p></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px">🤖</div><strong>Talk to Zara</strong><p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6">Sometimes verbalizing your stress (even to an AI) helps you process emotions and find perspective.</p><button class="btn btn-primary" style="margin-top:12px;font-size:12px;padding:8px 16px" onclick="showPanel('chat')">Open Chat</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MUSIC PANEL -->
+  <div id="panel-music" class="panel">
+    <div class="panel-title">🎵 Calm Music Player</div>
+    <p class="panel-sub">Curated soothing sounds and relaxing music for your wellness.</p>
+    <div class="two-col">
+      <div class="music-player">
+        <div style="position:relative;z-index:1">
+          <div class="now-playing">Now Playing</div>
+          <div class="track-name" id="track-name">Forest Rain</div>
+          <div class="track-artist" id="track-artist">Nature Sounds</div>
+          <div class="music-controls">
+            <button class="ctrl-btn" onclick="prevTrack()">⏮</button>
+            <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+            <button class="ctrl-btn" onclick="nextTrack()">⏭</button>
+            <span style="font-size:12px;opacity:0.6">🔊</span>
+            <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.05" value="0.5" oninput="setVolume(this.value)">
+          </div>
+          <div class="music-tracks" id="track-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌿 Why Music Heals</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="padding:14px;background:rgba(124,158,135,0.08);border-radius:14px;font-size:13px;line-height:1.7">
+            <strong>🧠 Brain Chemistry:</strong> Calm music increases dopamine — your brain's feel-good neurotransmitter
+          </div>
+          <div style="padding:14px;background:rgba(124,158,135,0.08);border-radius:14px;font-size:13px;line-height:1.7">
+            <strong>❤️ Heart Rate:</strong> Slow tempos (60-80 BPM) synchronize with your heartbeat and lower blood pressure
+          </div>
+          <div style="padding:14px;background:rgba(124,158,135,0.08);border-radius:14px;font-size:13px;line-height:1.7">
+            <strong>😴 Sleep Aid:</strong> 45 minutes of relaxing music before bed improves sleep quality by 35%
+          </div>
+          <div style="padding:14px;background:rgba(124,158,135,0.08);border-radius:14px;font-size:13px;line-height:1.7">
+            <strong>🎯 Focus:</strong> Nature sounds increase cognitive performance by up to 12%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div id="panel-chat" class="panel">
+    <div class="panel-title">🤖 Chat with Zara</div>
+    <p class="panel-sub">Your AI wellness companion — talk about anything, anytime. Zara listens and cares.</p>
+    <div class="card">
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <!-- Messages rendered by JS -->
+        </div>
+        <div class="chat-input-row">
+          <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Voice Input">🎤</button>
+          <input class="chat-inp" id="chat-input" placeholder="Type or speak to Zara... 💙" onkeydown="if(event.key==='Enter') sendChat()">
+          <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap" id="quick-prompts"></div>
+  </div>
+
+  <!-- PERIOD PANEL -->
+  <div id="panel-period" class="panel">
+    <div class="panel-title">🌸 Period Tracker</div>
+    <p class="panel-sub">Track your menstrual cycle, predict upcoming dates, and get personalized wellness tips.</p>
+    <div class="two-col">
+      <div class="card period-card">
+        <div class="card-title period-title">Log Your Cycle</div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#8b4d55;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Period Start Date</label>
+          <input type="date" class="inp" id="period-start" style="border-color:rgba(212,132,122,0.3)">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#8b4d55;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Period End Date</label>
+          <input type="date" class="inp" id="period-end" style="border-color:rgba(212,132,122,0.3)">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#8b4d55;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Flow Intensity</label>
+          <select class="inp" id="period-flow" style="border-color:rgba(212,132,122,0.3)">
+            <option>Light</option>
+            <option>Medium</option>
+            <option>Heavy</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#8b4d55;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Symptoms</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <div class="mood-btn" style="padding:8px 12px;font-size:12px" onclick="this.classList.toggle('selected')"><span>😣</span> Cramps</div>
+            <div class="mood-btn" style="padding:8px 12px;font-size:12px" onclick="this.classList.toggle('selected')"><span>😵</span> Headache</div>
+            <div class="mood-btn" style="padding:8px 12px;font-size:12px" onclick="this.classList.toggle('selected')"><span>😔</span> Mood Swings</div>
+            <div class="mood-btn" style="padding:8px 12px;font-size:12px" onclick="this.classList.toggle('selected')"><span>😴</span> Fatigue</div>
+            <div class="mood-btn" style="padding:8px 12px;font-size:12px" onclick="this.classList.toggle('selected')"><span>🤢</span> Nausea</div>
+          </div>
+        </div>
+        <button class="btn btn-rose" style="width:100%;justify-content:center;margin-top:16px" onclick="logPeriod()">Log Period 🌸</button>
+      </div>
+      <div>
+        <div class="card period-card" style="margin-bottom:20px">
+          <div class="card-title period-title">📅 Cycle Prediction</div>
+          <div id="period-prediction" style="font-size:14px;color:#8b4d55;line-height:1.8">Log your first period to see predictions!</div>
+        </div>
+        <div class="card period-card">
+          <div class="card-title period-title">🌸 Period Wellness Tips</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#8b4d55;line-height:1.7">
+            <div style="padding:12px;background:rgba(212,132,122,0.08);border-radius:12px">🌡️ <strong>Heat therapy:</strong> Warm compress on lower abdomen for 15-20 min relieves cramps</div>
+            <div style="padding:12px;background:rgba(212,132,122,0.08);border-radius:12px">🧘 <strong>Yoga:</strong> Child's pose and cat-cow stretches ease pelvic tension</div>
+            <div style="padding:12px;background:rgba(212,132,122,0.08);border-radius:12px">🥬 <strong>Eat iron-rich foods:</strong> Spinach, lentils, and dark chocolate help replace iron lost</div>
+            <div style="padding:12px;background:rgba(212,132,122,0.08);border-radius:12px">💧 <strong>Stay hydrated:</strong> Reduces bloating and helps with mood swings</div>
+            <div style="padding:12px;background:rgba(212,132,122,0.08);border-radius:12px">☕ <strong>Reduce caffeine:</strong> It worsens cramps and irritability</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY PANEL -->
+  <div id="panel-emergency" class="panel">
+    <div class="panel-title">☎️ Emergency Support</div>
+    <p class="panel-sub">Quick access to help when you need it most. You are not alone.</p>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">🚨 Quick Call</div>
+        <button class="emergency-btn" id="emergency-call-btn" onclick="emergencyCall()">📞 Call Emergency Contact</button>
+        <div style="margin-top:16px;padding:16px;background:var(--warm);border-radius:16px;font-size:13px;color:var(--text-muted);line-height:1.7">
+          <strong>Your emergency contact:</strong><br>
+          <span id="emergency-contact-display">Not set — update in profile</span>
+        </div>
+        <div style="margin-top:16px">
+          <div class="card-title">Mental Health Helplines (India) 🇮🇳</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="padding:12px;background:rgba(231,76,60,0.06);border-radius:12px;border:1px solid rgba(231,76,60,0.15)">📞 <strong>iCall:</strong> 9152987821</div>
+            <div style="padding:12px;background:rgba(231,76,60,0.06);border-radius:12px;border:1px solid rgba(231,76,60,0.15)">📞 <strong>Vandrevala Foundation:</strong> 1860-2662-345</div>
+            <div style="padding:12px;background:rgba(231,76,60,0.06);border-radius:12px;border:1px solid rgba(231,76,60,0.15)">📞 <strong>NIMHANS:</strong> 080-46110007</div>
+            <div style="padding:12px;background:rgba(231,76,60,0.06);border-radius:12px;border:1px solid rgba(231,76,60,0.15)">📞 <strong>Snehi:</strong> 044-24640050</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💙 You're Not Alone</div>
+        <p style="font-size:14px;line-height:1.8;color:var(--text-muted);margin-bottom:20px">If you're feeling overwhelmed, anxious, or unsafe, please reach out immediately. Help is always available, and your wellbeing matters deeply.</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <button class="btn btn-primary" onclick="showPanel('chat')" style="justify-content:center">💬 Talk to Zara (AI) Now</button>
+          <button class="btn btn-gold" onclick="showPanel('stress')" style="justify-content:center">🧘 Guided Breathing Exercise</button>
+          <button class="btn btn-rose" onclick="showPanel('music')" style="justify-content:center">🎵 Play Calming Music</button>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:rgba(124,158,135,0.08);border-radius:16px;border:1px solid var(--border)">
+          <strong style="font-size:13px;color:var(--sage-dark)">Remember:</strong>
+          <p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.7">You have survived 100% of your worst days so far. This moment will pass. You are stronger than you know. 💚</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let userData = {};
+let waterGlasses = 0;
+let selectedMood = null;
+let breathingInterval = null;
+let breathingActive = false;
+let currentTrack = 0;
+let isPlaying = false;
+let audioCtx = null;
+let currentOscillators = [];
+let gainNode = null;
+let speechRecognition = null;
+let isListening = false;
+
+// ── Tracks (Web Audio API generated sounds) ──────────────────────────────────
+const TRACKS = [
+  { name: 'Forest Rain', artist: 'Nature Sounds', type: 'rain' },
+  { name: 'Ocean Waves', artist: 'Nature Sounds', type: 'ocean' },
+  { name: 'Deep Meditation', artist: 'Zen Collection', type: 'meditation' },
+  { name: 'Gentle Stream', artist: 'Nature Sounds', type: 'stream' },
+  { name: 'Sleep Ambience', artist: 'Sleep Collection', type: 'sleep' },
+  { name: 'Calm Focus', artist: 'Study Sounds', type: 'focus' },
+];
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadUser();
+  loadStats();
+  renderWaterGlasses();
+  renderTrackList();
+  initChat();
+  setDateBadge();
+  setDailyTip();
+  loadHabits();
+  initSpeechRecognition();
+});
+
+async function loadUser() {
+  const res = await fetch('/api/user');
+  userData = await res.json();
+  document.getElementById('home-welcome').textContent = `Welcome back, ${userData.name}! 🌿`;
+  document.getElementById('greeting-text').textContent = getGreeting() + ` ${userData.name}!`;
+  document.getElementById('emergency-contact-display').textContent = userData.emergency_contact || 'Not set';
+  if (userData.gender === 'female') {
+    document.querySelector('.period-nav').style.display = 'flex';
+  }
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning ☀️';
+  if (h < 17) return 'Good afternoon 🌤️';
+  return 'Good evening 🌙';
+}
+
+function setDateBadge() {
+  const now = new Date();
+  document.getElementById('date-badge').textContent = now.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'short'});
+  document.getElementById('greeting-sub').textContent = `Your wellness journey continues — ${now.toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'})}`;
+}
+
+const TIPS = [
+  "💧 Your brain is 75% water. Stay hydrated for better focus and mood.",
+  "🌿 Even 5 minutes of mindfulness reduces stress hormones significantly.",
+  "😴 Sleep is when your brain consolidates memories and repairs your body.",
+  "🚶 A 10-minute walk boosts energy more effectively than a cup of coffee.",
+  "🍎 Eating colorful foods feeds different gut bacteria linked to happiness.",
+  "📵 Every social media break you take reduces cortisol by up to 20%.",
+  "🤗 Hugging someone for 20 seconds releases oxytocin — nature's stress reliever.",
+  "🌅 Morning sunlight exposure within 30 minutes of waking improves sleep quality tonight.",
+];
+function setDailyTip() {
+  document.getElementById('daily-tip').textContent = TIPS[new Date().getDay() % TIPS.length];
+}
+
+async function loadStats() {
+  const res = await fetch('/api/dashboard_stats');
+  const d = await res.json();
+  waterGlasses = d.water?.glasses || 0;
+  document.getElementById('stat-water').textContent = `${waterGlasses}/8`;
+  document.getElementById('stat-sleep').textContent = d.sleep ? `${d.sleep.hours}h` : '–';
+  document.getElementById('stat-habits').textContent = d.habits_count || 0;
+  document.getElementById('stat-mood').textContent = d.last_mood ? d.last_mood.emoji : '–';
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-p="${name}"]`)?.classList.add('active');
+  if (name === 'water') loadWater();
+  if (name === 'mood') loadMoodHistory();
+  if (name === 'habits') loadHabits();
+  if (name === 'period') loadPeriod();
+}
+
+// ── Mood ──────────────────────────────────────────────────────────────────────
+function selectMood(mood, emoji) {
+  selectedMood = {mood, emoji};
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+async function logMood() {
+  if (!selectedMood) return showToast('Please select a mood first! 😊');
+  const note = document.getElementById('mood-note').value;
+  await fetch('/api/mood', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({...selectedMood, note})
+  });
+  showToast(`Mood logged: ${selectedMood.emoji} ${selectedMood.mood}`);
+  document.getElementById('mood-note').value = '';
+  selectedMood = null;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  loadMoodHistory();
+  loadStats();
+}
+
+async function loadMoodHistory() {
+  const res = await fetch('/api/mood');
+  const d = await res.json();
+  const el = document.getElementById('mood-history');
+  if (!d.moods.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">No moods logged yet. Start tracking above!</p>'; return; }
+  el.innerHTML = [...d.moods].reverse().map(m => `
+    <div style="padding:12px 16px;background:var(--warm);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">${m.emoji}</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${m.mood}</div>
+        ${m.note ? `<div style="font-size:12px;color:var(--text-muted)">${m.note}</div>` : ''}
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">${m.date}</div>
+    </div>
+  `).join('');
+}
+
+// ── Water ─────────────────────────────────────────────────────────────────────
+function renderWaterGlasses() {
+  const el = document.getElementById('water-glasses');
+  el.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const g = document.createElement('div');
+    g.className = `glass-cup ${i < waterGlasses ? 'filled' : ''}`;
+    g.onclick = () => { waterGlasses = i + 1; addWater(0); };
+    el.appendChild(g);
+  }
+  document.getElementById('water-count').textContent = waterGlasses;
+  document.getElementById('water-bar').style.width = `${Math.min(waterGlasses/8*100,100)}%`;
+  const msgs = ['Start hydrating! 💧','Keep going! 💧','Halfway there! 💧💧','Almost there! 💧💧💧','Goal reached! 🎉','Superstar hydrator! ⭐'];
+  document.getElementById('water-msg').textContent = msgs[Math.min(Math.floor(waterGlasses/8*5), 5)];
+}
+
+async function addWater(n) {
+  const res = await fetch('/api/water', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({glasses: n})
+  });
+  const d = await res.json();
+  waterGlasses = d.today?.glasses || waterGlasses;
+  renderWaterGlasses();
+  if (waterGlasses >= 8) showToast('🎉 Water goal achieved! Amazing job!');
+  else showToast(`💧 ${waterGlasses}/8 glasses logged!`);
+  loadStats();
+}
+
+async function resetWater() {
+  waterGlasses = 0;
+  renderWaterGlasses();
+  showToast('Water tracker reset for today');
+}
+
+async function loadWater() {
+  const res = await fetch('/api/water');
+  const d = await res.json();
+  waterGlasses = d.today?.glasses || 0;
+  renderWaterGlasses();
+}
+
+// ── Sleep ─────────────────────────────────────────────────────────────────────
+async function logSleep() {
+  const bed = document.getElementById('sleep-time').value;
+  const wake = document.getElementById('wake-time').value;
+  const [bh, bm] = bed.split(':').map(Number);
+  const [wh, wm] = wake.split(':').map(Number);
+  let mins = (wh * 60 + wm) - (bh * 60 + bm);
+  if (mins < 0) mins += 24 * 60;
+  const hours = Math.round(mins / 60 * 10) / 10;
+
+  const res = await fetch('/api/sleep', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({hours, bed_time: bed, wake_time: wake})
+  });
+  const d = await res.json();
+  const entry = d.entry;
+
+  document.getElementById('sleep-result').style.display = 'block';
+  document.getElementById('sleep-hours-display').textContent = `${hours} hours`;
+  document.getElementById('sleep-quality-display').innerHTML = `<span class="sleep-quality-badge quality-${entry.quality.includes('Excellent')?'excellent':entry.quality.includes('Good')?'good':entry.quality.includes('Fair')?'fair':'poor'}">${entry.quality}</span>`;
+  document.getElementById('sleep-tip-display').textContent = entry.tip;
+  const emojis = {Excellent:'🌟', Good:'😊', Fair:'😐', Poor:'😴'};
+  document.getElementById('sleep-emoji').textContent = Object.entries(emojis).find(([k]) => entry.quality.includes(k))?.[1] || '😴';
+  showToast(`Sleep logged! ${entry.quality}`);
+  loadStats();
+}
+
+// ── Habits ────────────────────────────────────────────────────────────────────
+const HABIT_LIST = ['exercise','breakfast','water8','meditation','screen','sleep8','journal','fruit'];
+let completedHabits = new Set();
+
+async function loadHabits() {
+  const res = await fetch('/api/habits');
+  const d = await res.json();
+  completedHabits = new Set(d.today?.completed || []);
+  renderHabits();
+}
+
+function renderHabits() {
+  HABIT_LIST.forEach(h => {
+    const item = document.getElementById(`habit-${h}`) || document.querySelector(`[id="habit-${h}"]`);
+    const chk = document.getElementById(`chk-${h}`);
+    if (!item) return;
+    if (completedHabits.has(h)) {
+      item.classList.add('done');
+      if (chk) chk.textContent = '✓';
+    } else {
+      item.classList.remove('done');
+      if (chk) chk.textContent = '';
+    }
+  });
+  const count = completedHabits.size;
+  document.getElementById('habits-count-display').textContent = `${count}/8`;
+  document.getElementById('habits-bar').style.width = `${count/8*100}%`;
+  const msgs = ['Let\'s get started! 🌱','Good start! 💪','Building momentum! 🔥','Halfway there! ⭐','Amazing dedication! 🌟','Keep it up! 🚀','Outstanding! 🏆','PERFECT DAY! 🎉🎊'];
+  document.getElementById('habits-msg').textContent = msgs[Math.min(count, 7)];
+  loadStats();
+}
+
+async function toggleHabit(habit) {
+  const res = await fetch('/api/habits', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({habit})
+  });
+  const d = await res.json();
+  completedHabits = new Set(d.completed);
+  renderHabits();
+  const done = completedHabits.has(habit);
+  showToast(done ? '✅ Habit completed!' : '↩️ Habit unchecked');
+}
+
+// ── Stress / Breathing ────────────────────────────────────────────────────────
+function switchStressTab(tab) {
+  document.querySelectorAll('.stress-panel-content').forEach(el => el.style.display = 'none');
+  document.getElementById(`stress-${tab}`).style.display = 'block';
+  document.querySelectorAll('.mini-tab').forEach((t,i) => t.classList.toggle('active', ['breathe','meditation','tips'][i] === tab));
+}
+
+const BREATHING = [
+  { phase: 'Inhale', count: 4, class: 'expand', emoji: '🌬️' },
+  { phase: 'Hold', count: 7, class: 'hold', emoji: '⏸️' },
+  { phase: 'Exhale', count: 8, class: 'shrink', emoji: '💨' },
+];
+
+let breathPhase = 0, breathCount = 0, breathCycles = 0;
+
+function startBreathing() {
+  if (breathingActive) return;
+  breathingActive = true;
+  breathPhase = 0; breathCount = 0; breathCycles = 0;
+  runBreath();
+}
+
+function runBreath() {
+  if (!breathingActive) return;
+  const phase = BREATHING[breathPhase];
+  const circle = document.getElementById('breathing-circle');
+  const label = document.getElementById('breathing-label');
+  const count = document.getElementById('breathing-count');
+  circle.className = `breathing-circle ${phase.class}`;
+  label.textContent = `${phase.emoji} ${phase.phase}`;
+  count.textContent = phase.count - breathCount;
+  breathCount++;
+  if (breathCount >= phase.count) {
+    breathCount = 0;
+    breathPhase = (breathPhase + 1) % 3;
+    if (breathPhase === 0) {
+      breathCycles++;
+      if (breathCycles >= 4) { stopBreathing(); label.textContent = '✅ Done! Well done!'; count.textContent = '🌟'; return; }
+    }
+  }
+  breathingInterval = setTimeout(runBreath, 1000);
+}
+
+function stopBreathing() {
+  breathingActive = false;
+  clearTimeout(breathingInterval);
+  const circle = document.getElementById('breathing-circle');
+  circle.className = 'breathing-circle';
+  document.getElementById('breathing-label').textContent = 'Ready';
+  document.getElementById('breathing-count').textContent = '●';
+}
+
+// ── Music Player (Web Audio API) ──────────────────────────────────────────────
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0.5;
+  gainNode.connect(audioCtx.destination);
+}
+
+function stopAllSounds() {
+  currentOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+  currentOscillators = [];
+}
+
+function playTrackSound(type) {
+  stopAllSounds();
+  initAudio();
+  const now = audioCtx.currentTime;
+
+  function addOsc(freq, type2, gainVal, detune=0) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type2;
+    osc.frequency.value = freq;
+    osc.detune.value = detune;
+    g.gain.value = gainVal;
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start();
+    currentOscillators.push(osc);
+  }
+
+  function addNoise(gainVal) {
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const filter = audioCtx.createBiquadFilter();
+    const g = audioCtx.createGain();
+    g.gain.value = gainVal;
+    source.connect(filter);
+    filter.connect(g);
+    g.connect(gainNode);
+    source.start();
+    currentOscillators.push(source);
+    return filter;
+  }
+
+  if (type === 'rain') {
+    const f = addNoise(0.08);
+    f.type = 'bandpass';
+    f.frequency.value = 800;
+    f.Q.value = 0.5;
+    addOsc(60, 'sine', 0.03);
+  } else if (type === 'ocean') {
+    const f = addNoise(0.06);
+    f.type = 'lowpass';
+    f.frequency.value = 400;
+    addOsc(80, 'sine', 0.04);
+    addOsc(120, 'sine', 0.02);
+  } else if (type === 'meditation') {
+    addOsc(136.1, 'sine', 0.15);
+    addOsc(272.2, 'sine', 0.08);
+    addOsc(544.4, 'sine', 0.04);
+  } else if (type === 'stream') {
+    const f = addNoise(0.05);
+    f.type = 'bandpass';
+    f.frequency.value = 1200;
+    f.Q.value = 2;
+    addOsc(220, 'sine', 0.04, 5);
+  } else if (type === 'sleep') {
+    addOsc(174.6, 'sine', 0.18);
+    addOsc(349.2, 'sine', 0.06);
+    const f = addNoise(0.02);
+    f.type = 'lowpass';
+    f.frequency.value = 200;
+  } else if (type === 'focus') {
+    addOsc(40, 'sine', 0.12);
+    addOsc(440, 'sine', 0.05);
+    addOsc(480, 'sine', 0.05);
+  }
+}
+
+function renderTrackList() {
+  const el = document.getElementById('track-list');
+  el.innerHTML = TRACKS.map((t,i) => `
+    <div class="track-item ${i===currentTrack?'active':''}" onclick="selectTrack(${i})">
+      <div class="track-dot"></div>
+      <div style="flex:1">${t.name}</div>
+      <div style="font-size:11px;opacity:0.5">${t.artist}</div>
+    </div>
+  `).join('');
+}
+
+function selectTrack(i) {
+  currentTrack = i;
+  document.getElementById('track-name').textContent = TRACKS[i].name;
+  document.getElementById('track-artist').textContent = TRACKS[i].artist;
+  renderTrackList();
+  if (isPlaying) playTrackSound(TRACKS[i].type);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  document.getElementById('play-btn').textContent = isPlaying ? '⏸' : '▶';
+  if (isPlaying) playTrackSound(TRACKS[currentTrack].type);
+  else stopAllSounds();
+}
+
+function nextTrack() { selectTrack((currentTrack + 1) % TRACKS.length); }
+function prevTrack() { selectTrack((currentTrack - 1 + TRACKS.length) % TRACKS.length); }
+function setVolume(v) { if (gainNode) gainNode.gain.value = v; }
+
+// ── Chatbot ────────────────────────────────────────────────────────────────────
+const QUICK_PROMPTS = [
+  "I'm feeling stressed 😰",
+  "Help me sleep better 😴",
+  "I'm feeling anxious 😟",
+  "Motivate me! 💪",
+  "I'm feeling sad 😢",
+  "Give me a wellness tip 🌿",
+];
+
+function initChat() {
+  addBotMessage(`Hey there! 🌿 I'm **Zara**, your personal AI wellness companion!\n\nI'm here to support your mental and physical health journey. You can tell me how you're feeling, ask for stress relief tips, sleep advice, or just chat.\n\nHow are you feeling today? 💙`);
+
+  const qp = document.getElementById('quick-prompts');
+  QUICK_PROMPTS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.cssText = 'background:var(--warm);border:2px solid var(--border);color:var(--text);font-size:12px;padding:8px 14px';
+    btn.textContent = p;
+    btn.onclick = () => { document.getElementById('chat-input').value = p; sendChat(); };
+    qp.appendChild(btn);
+  });
+}
+
+function addBotMessage(text) {
+  const el = document.getElementById('chat-messages');
+  const time = new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.innerHTML = `
+    <div class="bot-avatar">🤖</div>
+    <div>
+      <div class="msg-bubble">${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>
+      <div class="msg-time">Zara • ${time}</div>
+    </div>
+  `;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const el = document.getElementById('chat-messages');
+  const time = new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `<div><div class="msg-bubble">${text}</div><div class="msg-time" style="text-align:right">You • ${time}</div></div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function showTyping() {
+  const el = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="bot-avatar">🤖</div><div class="msg-bubble" style="padding:16px 20px;display:flex;gap:6px;align-items:center"><span style="width:8px;height:8px;border-radius:50%;background:var(--sage-light);animation:pulse 1s 0s infinite"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--sage-light);animation:pulse 1s 0.2s infinite"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--sage-light);animation:pulse 1s 0.4s infinite"></span></div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  addUserMessage(msg);
+  showTyping();
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg})
+    });
+    const d = await res.json();
+    document.getElementById('typing-indicator')?.remove();
+    addBotMessage(d.response);
+    // Speak the response
+    speakText(d.response.replace(/<[^>]*>/g,'').replace(/\*\*/g,'').substring(0, 200));
+  } catch(e) {
+    document.getElementById('typing-indicator')?.remove();
+    addBotMessage("I'm having trouble connecting right now. Please try again! 💙");
+  }
+}
+
+// ── Voice ─────────────────────────────────────────────────────────────────────
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  speechRecognition = new SR();
+  speechRecognition.continuous = false;
+  speechRecognition.interimResults = false;
+  speechRecognition.lang = 'en-IN';
+  speechRecognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('chat-input').value = text;
+    stopListening();
+    sendChat();
+  };
+  speechRecognition.onend = () => stopListening();
+  speechRecognition.onerror = () => stopListening();
+}
+
+function toggleVoice() {
+  if (isListening) stopListening();
+  else startListening();
+}
+
+function startListening() {
+  if (!speechRecognition) return showToast('Voice not supported in this browser');
+  speechRecognition.start();
+  isListening = true;
+  document.getElementById('voice-btn').classList.add('listening');
+  document.getElementById('voice-btn').textContent = '🔴';
+  showToast('🎤 Listening... Speak now!');
+}
+
+function stopListening() {
+  if (speechRecognition) try { speechRecognition.stop(); } catch(e) {}
+  isListening = false;
+  const btn = document.getElementById('voice-btn');
+  if (btn) { btn.classList.remove('listening'); btn.textContent = '🎤'; }
+}
+
+function speakText(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 0.9; utt.pitch = 1.1; utt.volume = 0.8;
+  // Pick a nice voice
+  const voices = speechSynthesis.getVoices();
+  const nice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Karen') || v.lang === 'en-IN') || voices[0];
+  if (nice) utt.voice = nice;
+  window.speechSynthesis.speak(utt);
+}
+
+// ── Period Tracker ────────────────────────────────────────────────────────────
+async function logPeriod() {
+  const start = document.getElementById('period-start').value;
+  const end = document.getElementById('period-end').value;
+  const flow = document.getElementById('period-flow').value;
+  if (!start) return showToast('Please enter your period start date');
+  const res = await fetch('/api/periods', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({start_date: start, end_date: end, flow})
+  });
+  const d = await res.json();
+  if (d.success) {
+    showToast('🌸 Period logged successfully!');
+    showPrediction(d.entry);
+    loadPeriod();
+  }
+}
+
+function showPrediction(entry) {
+  const el = document.getElementById('period-prediction');
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="padding:12px;background:rgba(212,132,122,0.12);border-radius:12px">🌸 <strong>Last Period Started:</strong> ${entry.start_date || 'N/A'}</div>
+      <div style="padding:12px;background:rgba(158,135,201,0.12);border-radius:12px">🔮 <strong>Next Period (predicted):</strong> ${entry.next_predicted || 'N/A'}</div>
+      <div style="padding:12px;background:rgba(201,169,110,0.12);border-radius:12px">💛 <strong>Ovulation Day:</strong> ${entry.ovulation_day || 'N/A'}</div>
+      <div style="padding:12px;background:rgba(212,132,122,0.08);border-radius:12px">📊 <strong>Cycle Length:</strong> ~28 days (average)</div>
+    </div>
+  `;
+}
+
+async function loadPeriod() {
+  const res = await fetch('/api/periods');
+  const d = await res.json();
+  if (d.periods && d.periods.length > 0) {
+    showPrediction(d.periods[d.periods.length - 1]);
+  }
+}
+
+// ── Emergency ─────────────────────────────────────────────────────────────────
+function emergencyCall() {
+  const contact = userData.emergency_contact;
+  if (contact) {
+    showToast(`📞 Calling ${contact}...`);
+    window.location.href = `tel:${contact}`;
+  } else {
+    showToast('No emergency contact saved. Please update your profile.');
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

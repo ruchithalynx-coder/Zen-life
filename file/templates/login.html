@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mindcare – Smart Wellness Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage: #7c9e87;
+    --sage-light: #a8c5b0;
+    --sage-dark: #4d7a5e;
+    --cream: #faf6f0;
+    --warm: #f0e6d3;
+    --text: #1a2a1e;
+    --text-muted: #5a7060;
+    --rose: #d4847a;
+    --gold: #c9a96e;
+    --white: #ffffff;
+    --shadow: 0 20px 60px rgba(76,122,94,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bg-blobs {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  }
+  .blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px); opacity: 0.25;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--sage); top: -200px; right: -150px; animation: float1 12s ease-in-out infinite; }
+  .blob-2 { width: 400px; height: 400px; background: var(--gold); bottom: -100px; left: -100px; animation: float2 15s ease-in-out infinite; }
+  .blob-3 { width: 300px; height: 300px; background: var(--rose); top: 40%; left: 30%; animation: float3 18s ease-in-out infinite; }
+
+  @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-30px,40px) scale(1.05)} }
+  @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(40px,-30px) scale(0.95)} }
+  @keyframes float3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-20px,25px) scale(1.1)} }
+
+  .container {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 500px;
+    padding: 20px;
+  }
+
+  .logo-area {
+    text-align: center; margin-bottom: 32px;
+    animation: slideDown 0.8s ease both;
+  }
+  .logo-icon {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--sage), var(--sage-dark));
+    border-radius: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 32px; margin-bottom: 12px;
+    box-shadow: 0 12px 40px rgba(76,122,94,0.35);
+  }
+  .logo-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px; font-weight: 700;
+    color: var(--text); letter-spacing: -1px;
+  }
+  .logo-tagline {
+    font-size: 14px; color: var(--text-muted);
+    margin-top: 4px; font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 28px;
+    padding: 40px 36px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.6);
+    animation: slideUp 0.8s ease 0.2s both;
+  }
+
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--warm); border-radius: 16px;
+    padding: 4px; margin-bottom: 32px;
+  }
+  .tab {
+    flex: 1; padding: 10px;
+    text-align: center; border-radius: 12px;
+    cursor: pointer; font-size: 14px; font-weight: 500;
+    color: var(--text-muted); transition: all 0.3s;
+    border: none; background: none;
+  }
+  .tab.active {
+    background: white; color: var(--sage-dark);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  .form-section { display: none; }
+  .form-section.active { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:none} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .field {
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .field label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text-muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .field input, .field select {
+    width: 100%; padding: 13px 16px;
+    border: 2px solid rgba(124,158,135,0.2);
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text);
+    background: rgba(250,246,240,0.5);
+    outline: none; transition: all 0.3s;
+    appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--sage);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(124,158,135,0.12);
+  }
+
+  .gender-toggle {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .gender-btn {
+    padding: 10px 8px; text-align: center;
+    border: 2px solid rgba(124,158,135,0.2);
+    border-radius: 12px; cursor: pointer;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-muted); transition: all 0.3s;
+    background: rgba(250,246,240,0.5);
+  }
+  .gender-btn.selected {
+    border-color: var(--sage);
+    background: rgba(124,158,135,0.1);
+    color: var(--sage-dark);
+  }
+  .gender-btn span { display: block; font-size: 20px; margin-bottom: 2px; }
+
+  .btn-main {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, var(--sage), var(--sage-dark));
+    color: white; border: none;
+    border-radius: 16px; font-size: 15px;
+    font-weight: 600; cursor: pointer;
+    transition: all 0.3s; margin-top: 8px;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+    box-shadow: 0 8px 24px rgba(76,122,94,0.3);
+  }
+  .btn-main:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(76,122,94,0.4);
+  }
+  .btn-main:active { transform: translateY(0); }
+
+  .alert {
+    padding: 12px 16px; border-radius: 12px;
+    font-size: 13px; font-weight: 500;
+    margin-bottom: 16px; display: none;
+  }
+  .alert.error { background: #fde8e8; color: #c0392b; border: 1px solid #f5b7b1; }
+  .alert.success { background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; }
+  .alert.show { display: block; animation: fadeIn 0.3s ease; }
+
+  .features-strip {
+    display: flex; gap: 16px; justify-content: center;
+    margin-top: 24px; flex-wrap: wrap;
+    animation: slideUp 0.8s ease 0.4s both;
+  }
+  .feature-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; color: var(--text-muted);
+    font-weight: 500; border: 1px solid rgba(255,255,255,0.8);
+  }
+
+  .divider {
+    text-align: center; margin: 20px 0;
+    color: var(--text-muted); font-size: 12px;
+    position: relative;
+  }
+  .divider::before, .divider::after {
+    content: ''; position: absolute;
+    top: 50%; width: 35%; height: 1px;
+    background: rgba(124,158,135,0.2);
+  }
+  .divider::before { left: 0; }
+  .divider::after { right: 0; }
+
+  .period-note {
+    background: linear-gradient(135deg, #fdf0f5, #fce8ef);
+    border: 1px solid rgba(212,132,122,0.2);
+    border-radius: 12px; padding: 10px 14px;
+    font-size: 12px; color: #8b4d55;
+    margin-top: -8px; margin-bottom: 16px;
+    display: none;
+  }
+  .period-note.show { display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="bg-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<div class="container">
+  <div class="logo-area">
+    <div class="logo-icon">🌿</div>
+    <div class="logo-name">ZenLife</div>
+    <div class="logo-tagline">Your Smart Wellness Companion</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form" class="form-section active">
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password">
+      </div>
+      <button class="btn-main" onclick="doLogin()">Sign In to ZenLife 🌿</button>
+      <div class="divider">or try a demo</div>
+      <button class="btn-main" style="background:linear-gradient(135deg,#c9a96e,#b8895a)" onclick="demoLogin()">✨ Demo Login</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="register-form" class="form-section">
+      <div class="form-row">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="reg-age" placeholder="21" min="10" max="120">
+        </div>
+      </div>
+      <div class="field">
+        <label>Gmail / Email</label>
+        <input type="email" id="reg-email" placeholder="you@gmail.com">
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" id="reg-phone" placeholder="+91 9876543210">
+        </div>
+        <div class="field">
+          <label>Emergency Contact</label>
+          <input type="tel" id="reg-emergency" placeholder="+91 9876543210">
+        </div>
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <div class="gender-toggle">
+          <div class="gender-btn" onclick="selectGender('male', this)"><span>👨</span> Male</div>
+          <div class="gender-btn" onclick="selectGender('female', this)"><span>👩</span> Female</div>
+          <div class="gender-btn" onclick="selectGender('other', this)"><span>🧑</span> Other</div>
+        </div>
+      </div>
+      <div class="period-note" id="period-note">
+        🌸 <span>Period Tracker will be enabled for you — track your cycle, predict PMS days, and get comfort tips!</span>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Create a strong password">
+      </div>
+      <button class="btn-main" onclick="doRegister()">Join ZenLife 🌿</button>
+    </div>
+  </div>
+
+  <div class="features-strip">
+    <div class="feature-badge">😊 Mood Tracker</div>
+    <div class="feature-badge">💧 Hydration</div>
+    <div class="feature-badge">😴 Sleep</div>
+    <div class="feature-badge">🤖 AI Chat</div>
+    <div class="feature-badge">🎵 Music</div>
+  </div>
+</div>
+
+<script>
+let selectedGender = '';
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').classList.toggle('active', tab==='login');
+  document.getElementById('register-form').classList.toggle('active', tab==='register');
+  hideAlert();
+}
+
+function selectGender(gender, el) {
+  selectedGender = gender;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('period-note').classList.toggle('show', gender === 'female');
+}
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.className = `alert ${type} show`;
+}
+function hideAlert() {
+  document.getElementById('alert').className = 'alert';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return showAlert('Please fill in all fields.', 'error');
+  const res = await fetch('/login', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, password})
+  });
+  const data = await res.json();
+  if (data.success) {
+    showAlert('Welcome back! Loading your dashboard...', 'success');
+    setTimeout(() => window.location.href = '/dashboard', 1000);
+  } else {
+    showAlert(data.message, 'error');
+  }
+}
+
+async function demoLogin() {
+  // Create demo account
+  await fetch('/register', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name:'Alex Demo', age:22, email:'demo@zenlife.com', gender:'female', phone:'+91 9876543210', emergency_contact:'+91 9876543211', password:'demo123'})
+  });
+  document.getElementById('login-email').value = 'demo@zenlife.com';
+  document.getElementById('login-password').value = 'demo123';
+  doLogin();
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const age = document.getElementById('reg-age').value;
+  const email = document.getElementById('reg-email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const emergency = document.getElementById('reg-emergency').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!name || !age || !email || !password || !selectedGender) return showAlert('Please fill in all fields and select gender.', 'error');
+  if (password.length < 6) return showAlert('Password must be at least 6 characters.', 'error');
+  const res = await fetch('/register', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, age, email, gender: selectedGender, phone, emergency_contact: emergency, password})
+  });
+  const data = await res.json();
+  if (data.success) {
+    showAlert('Account created! Signing you in...', 'success');
+    setTimeout(() => {
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = password;
+      doLogin();
+    }, 1000);
+  } else {
+    showAlert(data.message, 'error');
+  }
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Enter') { document.getElementById('login-form').classList.contains('active') ? doLogin() : doRegister(); } });
+</script>
+</body>
+</html>
